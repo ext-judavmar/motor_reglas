@@ -1,2 +1,0 @@
-timestamp,script,vus,avg_duration_ms,rps,p95_ms,error_rate,checks_passed,checks_failed
-2026-04-14T21:13:46.336Z,TR-3226_movimiento_box_alert,5,609.83,6.29,299.20,0.0000,253,0

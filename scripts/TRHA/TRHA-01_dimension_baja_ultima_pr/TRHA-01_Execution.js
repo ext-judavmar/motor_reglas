@@ -1,6 +1,6 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
-import { getOptions, handleSummary as _handleSummary } from '../../../generalfunctions/k6functions.js';
+import { sleep } from 'k6';
+import { getOptions, handleSummary as _handleSummary, checkResponse } from '../../../generalfunctions/k6functions.js';
 import { executionCases } from '../../../testdata/TRHA/TRHA-01_dimension_baja_ultima_pr.js';
 
 export let options = getOptions();
@@ -28,7 +28,7 @@ export default function () {
     params
   );
 
-  check(response, { 'status is 200': (r) => r.status === 200 });
+  checkResponse(response);
 
   sleep(0.3);
 }

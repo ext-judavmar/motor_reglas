@@ -1,3 +1,12 @@
+// ─── Valid box values for this feature ───────────────────────────────────────
+export const validBoxes = [
+  'OUTLIER',
+  'UP AND COMER',
+  'EXCEEDER',
+  'ACHIEVER',
+  'TOO SOON TO RATE',
+];
+
 // ─── IntAPI test cases ────────────────────────────────────────────────────────
 // Endpoint: /fpsIntegrationSMU/bulk-execution
 // Payload : { process, smu_context_list: [{ user, context: { box } }] }

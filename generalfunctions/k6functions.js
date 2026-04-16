@@ -1,4 +1,18 @@
+import { check } from 'k6';
+import { Counter } from 'k6/metrics';
+
+const errorCounter = new Counter('errors');
+
 const isNumeric = (value) => /^\d+$/.test(value);
+
+// Use this instead of check() in every script so failed requests
+// are counted in the 'errors' measurement that Grafana dashboard queries.
+export function checkResponse(response) {
+  const passed = check(response, { 'status is 200': (r) => r.status === 200 });
+  if (!passed) errorCounter.add(1);
+  return passed;
+}
+
 
 export function getOptions(defaultVus = 5) {
   const targetVusEnv = `${__ENV.TARGET_VUS}`;

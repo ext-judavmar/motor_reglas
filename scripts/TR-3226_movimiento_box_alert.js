@@ -1,6 +1,6 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
-import { getOptions, handleSummary as _handleSummary } from '../generalfunctions/k6functions.js';
+import { sleep } from 'k6';
+import { getOptions, handleSummary as _handleSummary, checkResponse } from '../generalfunctions/k6functions.js';
 
 export let options = getOptions();
 

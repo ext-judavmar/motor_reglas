@@ -1,31 +1,22 @@
-// ─── Valid box values for this feature ───────────────────────────────────────
-export const validBoxes = [
-  'OUTLIER',
-  'UP AND COMER',
-  'EXCEEDER',
-  'ACHIEVER',
-  'TOO SOON TO RATE',
-];
-
 // ─── IntAPI test cases ────────────────────────────────────────────────────────
 // Endpoint: /fpsIntegrationSMU/bulk-execution
 // Payload : { process, smu_context_list: [{ user, context: { box } }] }
 
 export const intApiCases = [
-  { id: 'TR-3179', user: '1155',      box: 'OUTLIER'          }, // Generada    - 2Condiciones_Outlier
-  { id: 'TR-3180', user: '2294',      box: 'TOO SOON TO RATE' }, // NO_Generada - 2Condiciones_TooSoonToRate
-  { id: 'TR-3181', user: '30035517',  box: 'UP AND COMER'     }, // Generada    - What_UpAndComer
-  { id: 'TR-3182', user: '50052',     box: 'EXCEEDER'         }, // Generada    - How_Exceeder
-  { id: 'TR-3189', user: '30010678',  box: 'UP AND COMER'     }, // Generada    - 2Condiciones_UpAndComer
-  { id: 'TR-3190', user: '30048953',  box: 'TOO SOON TO RATE' }, // Generada    - 2Condiciones_TooSoonToRate
-  { id: 'TR-3191', user: '30097306',  box: 'EXCEEDER'         }, // Generada    - 2Condiciones_Exceeder
-  { id: 'TR-3192', user: '30030634',  box: 'ACHIEVER'         }, // Generada    - 2Condiciones_Achiever
-  { id: 'TR-3193', user: '2429',      box: 'OUTLIER'          }, // NO_Generada - 2Condiciones_Outlier
-  { id: 'TR-3194', user: '2741',      box: 'EXCEEDER'         }, // NO_Generada - 2Condiciones_Exceeder
-  { id: 'TR-3195', user: '30002566',  box: 'ACHIEVER'         }, // NO_Generada - 2Condiciones_Achiever
-  { id: 'TR-3196', user: '30003279',  box: 'UP AND COMER'     }, // NO_Generada - 2Condiciones_UpAndComer
-  { id: 'TR-3197', user: '30006034',  box: 'TOO SOON TO RATE' }, // NO_Generada - 2Condiciones_TooSoonToRate
-  { id: 'TR-3198', user: '30006443',  box: null               }, // NO_Generada - NoBox (empty context)
+  { id: 'TR-3179', name: 'SI_2cond_outlier',    user: '1155',      box: 'OUTLIER'          }, // Generada    - 2Condiciones_Outlier
+  { id: 'TR-3180', name: 'NO_2cond_toosoon',    user: '2294',      box: 'TOO SOON TO RATE' }, // NO_Generada - 2Condiciones_TooSoonToRate
+  { id: 'TR-3181', name: 'SI_what_uac',         user: '30035517',  box: 'UP AND COMER'     }, // Generada    - What_UpAndComer
+  { id: 'TR-3182', name: 'SI_how_exc',          user: '50052',     box: 'EXCEEDER'         }, // Generada    - How_Exceeder
+  { id: 'TR-3189', name: 'SI_2cond_uac',        user: '30010678',  box: 'UP AND COMER'     }, // Generada    - 2Condiciones_UpAndComer
+  { id: 'TR-3190', name: 'SI_2cond_toosoon',    user: '30048953',  box: 'TOO SOON TO RATE' }, // Generada    - 2Condiciones_TooSoonToRate
+  { id: 'TR-3191', name: 'SI_2cond_exc',        user: '30097306',  box: 'EXCEEDER'         }, // Generada    - 2Condiciones_Exceeder
+  { id: 'TR-3192', name: 'SI_2cond_achiever',   user: '30030634',  box: 'ACHIEVER'         }, // Generada    - 2Condiciones_Achiever
+  { id: 'TR-3193', name: 'NO_2cond_outlier',    user: '2429',      box: 'OUTLIER'          }, // NO_Generada - 2Condiciones_Outlier
+  { id: 'TR-3194', name: 'NO_2cond_exc',        user: '2741',      box: 'EXCEEDER'         }, // NO_Generada - 2Condiciones_Exceeder
+  { id: 'TR-3195', name: 'NO_2cond_achiever',   user: '30002566',  box: 'ACHIEVER'         }, // NO_Generada - 2Condiciones_Achiever
+  { id: 'TR-3196', name: 'NO_2cond_uac',        user: '30003279',  box: 'UP AND COMER'     }, // NO_Generada - 2Condiciones_UpAndComer
+  { id: 'TR-3197', name: 'NO_2cond_toosoon_b',  user: '30006034',  box: 'TOO SOON TO RATE' }, // NO_Generada - 2Condiciones_TooSoonToRate
+  { id: 'TR-3198', name: 'NO_nobox',            user: '30006443',  box: null               }, // NO_Generada - NoBox (empty context)
 ];
 
 // ─── Execution test cases ─────────────────────────────────────────────────────
@@ -128,6 +119,6 @@ function buildMetrics(performanceWhat, performanceHow) {
 }
 
 export const executionCases = [
-  { id: 'TR-3199', input_context: { ...SHARED_USER, metrics: buildMetrics('NO ALCANZÓ EXPECTATIVAS', 'ALINEADO')    } }, // Generada
-  { id: 'TR-3200', input_context: { ...SHARED_USER, metrics: buildMetrics('ALCANZÓ EXPECTATIVAS',    'alineado')    } }, // NO_Generada
+  { id: 'TR-3199', name: 'SI_noalcanzo_alineado', input_context: { ...SHARED_USER, metrics: buildMetrics('NO ALCANZÓ EXPECTATIVAS', 'ALINEADO')    } }, // Generada
+  { id: 'TR-3200', name: 'NO_alcanzo_alineado',   input_context: { ...SHARED_USER, metrics: buildMetrics('ALCANZÓ EXPECTATIVAS',    'alineado')    } }, // NO_Generada
 ];

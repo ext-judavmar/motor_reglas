@@ -3,11 +3,12 @@ import { sleep } from 'k6';
 import { getOptions, handleSummary as _handleSummary, checkResponse } from '../../../generalfunctions/k6functions.js';
 import { executionCases } from '../../../testdata/TRHA/TRHA-01_dimension_baja_ultima_pr.js';
 
-export let options = getOptions();
-
-const BASE_URL    = 'https://test--fps-rule-engine.furyapps.io';
+const BASE_URL    = __ENV.BASE_URL || 'https://test--fps-rule-engine.furyapps.io';
 const TIGER_TOKEN = `${__ENV.TIGER_TOKEN}`;
 const SCRIPT_NAME = 'TRHA-01_dimension_baja_ultima_pr_Execution';
+
+const CASE_TAGS = executionCases.map(tc => `${SCRIPT_NAME}_${tc.id}_${tc.name}`);
+export let options = getOptions(5, CASE_TAGS);
 
 export default function () {
   const tc = executionCases[Math.floor(Math.random() * executionCases.length)];
@@ -19,8 +20,10 @@ export default function () {
       'Content-Type':  'application/json',
       'X-Tiger-Token': TIGER_TOKEN
     },
-    tags: { name: `${SCRIPT_NAME}_${tc.id}` }
+    tags: { name: `${SCRIPT_NAME}_${tc.id}_${tc.name}` }
   };
+
+  console.log(`[VU ${__VU}] ${tc.id} | ${tc.name}`);
 
   const response = http.post(
     `${BASE_URL}/reglas/bulk/env-test/headsup/global-smu-prod`,

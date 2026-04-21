@@ -1,7 +1,9 @@
 import http from 'k6/http';
 import { sleep } from 'k6';
-import { getOptions, handleSummary as _handleSummary, checkResponse } from '../../../generalfunctions/k6functions.js';
+import { getOptions, handleSummary as _handleSummary, checkResponse, validateEnv } from '../../../generalfunctions/k6functions.js';
 import { executionCases } from '../../../testdata/TRHA/TRHA-03_movimiento_box_alert.js';
+import { eligibleUsers } from '../../../generalfunctions/csvdata.js';
+//import { logResponse } from '../../../generalfunctions/k6functions.js';
 
 const BASE_URL    = __ENV.BASE_URL || 'https://test--fps-rule-engine.furyapps.io';
 const TIGER_TOKEN = `${__ENV.TIGER_TOKEN}`;
@@ -10,12 +12,15 @@ const SCRIPT_NAME = 'TRHA-03_movimiento_box_alert_Execution';
 const CASE_TAGS = executionCases.map(tc => `${SCRIPT_NAME}_${tc.id}_${tc.name}`);
 export let options = getOptions(5, CASE_TAGS);
 
+export function setup() { validateEnv(); }
+
 export default function () {
-  const tc = executionCases[Math.floor(Math.random() * executionCases.length)];
+  const tc   = executionCases[Math.floor(Math.random() * executionCases.length)];
+  const user = Number(eligibleUsers[Math.floor(Math.random() * eligibleUsers.length)]);
 
   const payload = JSON.stringify({
     input_context: {
-      userId:    tc.userId,
+      userId:    user,
       firstName: tc.firstName,
       lastName:  tc.lastName,
       hireDate:  tc.hireDate,
@@ -32,7 +37,7 @@ export default function () {
     tags: { name: `${SCRIPT_NAME}_${tc.id}_${tc.name}` }
   };
 
-  console.log(`[VU ${__VU}] ${tc.id} | ${tc.name}`);
+  console.log(`[VU ${__VU}] ${tc.id} | ${tc.name} | user:${user}`);
 
   const response = http.post(
     `${BASE_URL}/reglas/bulk/env-test/headsup/global-smu-prod`,
@@ -41,6 +46,9 @@ export default function () {
   );
 
   checkResponse(response);
+// log response body:
+/*  logResponse(response, tc);  // remove when done inspecting
+  checkResponse(response);*/
 
   sleep(0.3);
 }

@@ -225,6 +225,19 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
 </html>`;
 }
 
+export function logResponse(response, tc) {
+  console.log(`[RESPONSE] ${tc.id} | ${tc.name} | status:${response.status} | body:${response.body}`);
+}
+
+// Call from each script's setup() — aborts the test before any VU starts
+// if TIGER_TOKEN is missing or was not injected by the shell.
+export function validateEnv() {
+  const token = __ENV.TIGER_TOKEN;
+  if (!token || token === 'undefined' || token.trim() === '') {
+    throw new Error('TIGER_TOKEN is not set. Pass it with: -e "TIGER_TOKEN=Bearer <token>"');
+  }
+}
+
 export function handleSummary(data, scriptName) {
   const timestamp = new Date().toISOString();
   const vus       = data.metrics.vus_max             ? data.metrics.vus_max.values.value              : 0;

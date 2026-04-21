@@ -1,6 +1,6 @@
 import http from 'k6/http';
 import { sleep } from 'k6';
-import { getOptions, handleSummary as _handleSummary, checkResponse } from '../../../generalfunctions/k6functions.js';
+import { getOptions, handleSummary as _handleSummary, checkResponse, validateEnv } from '../../../generalfunctions/k6functions.js';
 import { intApiCases } from '../../../testdata/TRHA/TRHA-03_movimiento_box_alert.js';
 import { eligibleUsers } from '../../../generalfunctions/csvdata.js';
 
@@ -10,6 +10,8 @@ const SCRIPT_NAME = 'TRHA-03_movimiento_box_alert_IntAPI';
 
 const CASE_TAGS = intApiCases.map(tc => `${SCRIPT_NAME}_${tc.id}_${tc.name}`);
 export let options = getOptions(5, CASE_TAGS);
+
+export function setup() { validateEnv(); }
 
 export default function () {
   const tc   = intApiCases[Math.floor(Math.random() * intApiCases.length)];

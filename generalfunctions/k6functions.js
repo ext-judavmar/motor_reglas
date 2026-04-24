@@ -9,7 +9,10 @@ const isNumeric = (value) => /^\d+$/.test(value);
 // are counted in the 'errors' measurement that Grafana dashboard queries.
 export function checkResponse(response) {
   const passed = check(response, { 'status is 200': (r) => r.status === 200 });
-  if (!passed) errorCounter.add(1);
+  if (!passed) {
+    errorCounter.add(1);
+    console.error(`[FAIL] status=${response.status}`);
+  }
   return passed;
 }
 
@@ -250,7 +253,8 @@ export function handleSummary(data, scriptName) {
   const fails     = data.metrics.checks              ? data.metrics.checks.values.fails                : 0;
 
   const fileTimestamp = timestamp.replace('T', '_').replace(/:/g, '-').slice(0, 19);
-  const testType      = __ENV.TEST_TYPE || 'smoke';
+  const testType      = __ENV.TEST_TYPE    || 'smoke';
+  const resultsDir    = __ENV.RESULTS_PATH || 'results';
 
   // Collect per-endpoint metrics from tagged requests
   const endpoints = [];
@@ -329,8 +333,8 @@ export function handleSummary(data, scriptName) {
   const htmlReport = generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, p99, errorRate, checks, fails, caseEndpoints, displayName);
 
   return {
-    [`/results/report_${scriptName}_${testType}_t_${fileTimestamp}.csv`]:  csvHeader + csvRows,
-    [`/results/report_${scriptName}_${testType}_t_${fileTimestamp}.html`]: htmlReport,
+    [`${resultsDir}/report_${scriptName}_${testType}_t_${fileTimestamp}.csv`]:  csvHeader + csvRows,
+    [`${resultsDir}/report_${scriptName}_${testType}_t_${fileTimestamp}.html`]: htmlReport,
     stdout: consoleReport
   };
 }

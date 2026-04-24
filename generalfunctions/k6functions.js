@@ -17,6 +17,17 @@ export function checkResponse(response) {
 }
 
 
+export function logRequest(url, payload) {
+  console.log(`[REQUEST] ${url}`);
+  console.log(`[PAYLOAD] ${JSON.stringify(payload)}`);
+}
+
+export function logResponse(response) {
+  console.log(`[STATUS]  ${response.status}`);
+  console.log(`[BODY]    ${response.body}`);
+}
+
+
 // TEST_TYPE (smoke|load|stress) drives both stages and filename.
 // TARGET_VUS sets the peak VU count (default 5).
 export function getOptions(defaultVus = 5, tagNames = []) {
@@ -228,9 +239,6 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
 </html>`;
 }
 
-export function logResponse(response, tc) {
-  console.log(`[RESPONSE] ${tc.id} | ${tc.name} | status:${response.status} | body:${response.body}`);
-}
 
 // Call from each script's setup() — aborts the test before any VU starts
 // if TIGER_TOKEN is missing or was not injected by the shell.

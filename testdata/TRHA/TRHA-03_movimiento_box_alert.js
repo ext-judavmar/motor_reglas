@@ -44,29 +44,29 @@ function buildMetrics(prev, what, how) {
 }
 
 export const executionCases = [
-  { id: 'TR-3224', name: 'NO_prev_achiever',          box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('ACHIEVER',         'MEET EXPECTATIONS',       'ALIGNED')          }, // NO  - prev=ACHIEVER
-  { id: 'TR-3230', name: 'SI_prev_alert_uac',          box: 'UP AND COMER', ...SHARED_USER, metrics: buildMetrics('ALERT',            'ABOVE EXPECTATIONS',      'ROLE MODEL')       }, // SI  - prev=ALERT
-  { id: 'TR-3231', name: 'SI_prev_alert_exc',          box: 'EXCEEDER',     ...SHARED_USER, metrics: buildMetrics('ALERT',            'ABOVE EXPECTATIONS',      'ROLE MODEL')       }, // SI  - prev=ALERT
-  { id: 'TR-3232', name: 'SI_alert_out_meet_rm',       box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('ALERT',            'MEET EXPECTATIONS',       'ROLE MODEL')       }, // SI  - prev=ALERT
-  { id: 'TR-3233', name: 'SI_alert_out_above_rm',      box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('ALERT',            'ABOVE EXPECTATIONS',      'ROLE MODEL')       }, // SI  - prev=ALERT
-  { id: 'TR-3234', name: 'SI_alert_out_above_aln',     box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('ALERT',            'ABOVE EXPECTATIONS',      'ALIGNED')          }, // SI  - prev=ALERT
-  { id: 'TR-3238', name: 'NO_alert_out_below_need',    box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('ALERT',            'BELOW EXPECTATIONS',      'NEED ALIGNMENT')   }, // NO  - prev=ALERT
-  { id: 'TR-3240', name: 'NO_alert_uac_below_need',    box: 'UP AND COMER', ...SHARED_USER, metrics: buildMetrics('ALERT',            'BELOW EXPECTATIONS',      'NEED ALIGNMENT')   }, // NO  - prev=ALERT
-  { id: 'TR-3243', name: 'NO_alert_exc_below_need',    box: 'EXCEEDER',     ...SHARED_USER, metrics: buildMetrics('ALERT',            'BELOW EXPECTATIONS',      'NEED ALIGNMENT')   }, // NO  - prev=ALERT
-  { id: 'TR-3245', name: 'NO_prev_toosoon',            box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('TOO SOON TO RATE', 'MEET_EXPECTATIONS',       'ALIGNED')          }, // NO  - prev=TOO SOON TO RATE
-  { id: 'TR-3246', name: 'NO_box_alert_prev_alert',    box: 'ALERT',        ...SHARED_USER, metrics: buildMetrics('ALERT',            'MEET_EXPECTATIONS',       'ALIGNED')          }, // NO  - prev=ALERT  box=ALERT
-  { id: 'TR-3247', name: 'NO_prev_uac_below_need',     box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('UP AND COMER',     'BELOW_EXPECTATIONS',      'NEED_ALIGNMENT')   }, // NO  - prev=UP AND COMER
-  { id: 'TR-3248', name: 'NO_box_alert_below_need',    box: 'ALERT',        ...SHARED_USER, metrics: buildMetrics('ALERT',            'BELOW_EXPECTATIONS',      'NEED_ALIGNMENT')   }, // NO  - prev=ALERT  box=ALERT
-  { id: 'TR-3249', name: 'NO_prev_outlier',            box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('OUTLIER',          'BELOW_EXPECTATIONS',      'NEED_ALIGNMENT')   }, // NO  - prev=OUTLIER
-  { id: 'TR-3250', name: 'NO_prev_uac_box_uac',        box: 'UP AND COMER', ...SHARED_USER, metrics: buildMetrics('UP AND COMER',     'MEET_EXPECTATIONS',       'ALIGNED')          }, // NO  - prev=UP AND COMER
-  { id: 'TR-3251', name: 'NO_prev_exc_box_exc',        box: 'EXCEEDER',     ...SHARED_USER, metrics: buildMetrics('EXCEEDER',         'MEET EXPECTATIONS',       'ALIGNED')          }, // NO  - prev=EXCEEDER
-  { id: 'TR-3252', name: 'NO_prev_null',               box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('null',             'MEET_EXPECTATIONS',       'ALIGNED')          }, // NO  - prev=null
-  { id: 'TR-3253', name: 'NO_box_null',                box: 'null',         ...SHARED_USER, metrics: buildMetrics('ALERT',            'MEET_EXPECTATIONS',       'ALIGNED')          }, // NO  - box=null
-  { id: 'TR-3254', name: 'SI_what_null',               box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('ALERT',            'null',                    'ALIGNED')          }, // SI  - what=null
-  { id: 'TR-3255', name: 'SI_how_null',                box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('ALERT',            'MEET_EXPECTATIONS',       'null')             }, // SI  - how=null
-  { id: 'TR-3256', name: 'SI_no_what_how',             box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('ALERT',            null,                      null)               }, // SI  - no what/how
-  { id: 'TR-3257', name: 'SI_esp_cumplio_alineado',    box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('ALERT',            'cumplió expectativas',    'alineado')         }, // SI  - español
-  { id: 'TR-3258', name: 'SI_esp_supero_modelo',       box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('ALERT',            'superó expectativas',     'modelo a seguir')  }, // SI  - español
-  { id: 'TR-3259', name: 'NO_esp_nocumplio',           box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('ALERT',            'no cumplió expectativas', 'alineado')         }, // NO  - español
-  { id: 'TR-3260', name: 'NO_esp_cumplio_need',        box: 'OUTLIER',      ...SHARED_USER, metrics: buildMetrics('ALERT',            'cumplió expectativas',    'necesita alinearse')}, // NO  - español
+  { id: 'TR-3224', name: 'NO_prev_achiever',          input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('ACHIEVER',         'MEET EXPECTATIONS',       'ALIGNED')          } }, // NO  - prev=ACHIEVER
+  { id: 'TR-3230', name: 'SI_prev_alert_uac',          input_context: { ...SHARED_USER, box: 'UP AND COMER', metrics: buildMetrics('ALERT',            'ABOVE EXPECTATIONS',      'ROLE MODEL')       } }, // SI  - prev=ALERT
+  { id: 'TR-3231', name: 'SI_prev_alert_exc',          input_context: { ...SHARED_USER, box: 'EXCEEDER',     metrics: buildMetrics('ALERT',            'ABOVE EXPECTATIONS',      'ROLE MODEL')       } }, // SI  - prev=ALERT
+  { id: 'TR-3232', name: 'SI_alert_out_meet_rm',       input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('ALERT',            'MEET EXPECTATIONS',       'ROLE MODEL')       } }, // SI  - prev=ALERT
+  { id: 'TR-3233', name: 'SI_alert_out_above_rm',      input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('ALERT',            'ABOVE EXPECTATIONS',      'ROLE MODEL')       } }, // SI  - prev=ALERT
+  { id: 'TR-3234', name: 'SI_alert_out_above_aln',     input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('ALERT',            'ABOVE EXPECTATIONS',      'ALIGNED')          } }, // SI  - prev=ALERT
+  { id: 'TR-3238', name: 'NO_alert_out_below_need',    input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('ALERT',            'BELOW EXPECTATIONS',      'NEED ALIGNMENT')   } }, // NO  - prev=ALERT
+  { id: 'TR-3240', name: 'NO_alert_uac_below_need',    input_context: { ...SHARED_USER, box: 'UP AND COMER', metrics: buildMetrics('ALERT',            'BELOW EXPECTATIONS',      'NEED ALIGNMENT')   } }, // NO  - prev=ALERT
+  { id: 'TR-3243', name: 'NO_alert_exc_below_need',    input_context: { ...SHARED_USER, box: 'EXCEEDER',     metrics: buildMetrics('ALERT',            'BELOW EXPECTATIONS',      'NEED ALIGNMENT')   } }, // NO  - prev=ALERT
+  { id: 'TR-3245', name: 'NO_prev_toosoon',            input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('TOO SOON TO RATE', 'MEET_EXPECTATIONS',       'ALIGNED')          } }, // NO  - prev=TOO SOON TO RATE
+  { id: 'TR-3246', name: 'NO_box_alert_prev_alert',    input_context: { ...SHARED_USER, box: 'ALERT',        metrics: buildMetrics('ALERT',            'MEET_EXPECTATIONS',       'ALIGNED')          } }, // NO  - prev=ALERT  box=ALERT
+  { id: 'TR-3247', name: 'NO_prev_uac_below_need',     input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('UP AND COMER',     'BELOW_EXPECTATIONS',      'NEED_ALIGNMENT')   } }, // NO  - prev=UP AND COMER
+  { id: 'TR-3248', name: 'NO_box_alert_below_need',    input_context: { ...SHARED_USER, box: 'ALERT',        metrics: buildMetrics('ALERT',            'BELOW_EXPECTATIONS',      'NEED_ALIGNMENT')   } }, // NO  - prev=ALERT  box=ALERT
+  { id: 'TR-3249', name: 'NO_prev_outlier',            input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('OUTLIER',          'BELOW_EXPECTATIONS',      'NEED_ALIGNMENT')   } }, // NO  - prev=OUTLIER
+  { id: 'TR-3250', name: 'NO_prev_uac_box_uac',        input_context: { ...SHARED_USER, box: 'UP AND COMER', metrics: buildMetrics('UP AND COMER',     'MEET_EXPECTATIONS',       'ALIGNED')          } }, // NO  - prev=UP AND COMER
+  { id: 'TR-3251', name: 'NO_prev_exc_box_exc',        input_context: { ...SHARED_USER, box: 'EXCEEDER',     metrics: buildMetrics('EXCEEDER',         'MEET EXPECTATIONS',       'ALIGNED')          } }, // NO  - prev=EXCEEDER
+  { id: 'TR-3252', name: 'NO_prev_null',               input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('null',             'MEET_EXPECTATIONS',       'ALIGNED')          } }, // NO  - prev=null
+  { id: 'TR-3253', name: 'NO_box_null',                input_context: { ...SHARED_USER, box: 'null',         metrics: buildMetrics('ALERT',            'MEET_EXPECTATIONS',       'ALIGNED')          } }, // NO  - box=null
+  { id: 'TR-3254', name: 'SI_what_null',               input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('ALERT',            'null',                    'ALIGNED')          } }, // SI  - what=null
+  { id: 'TR-3255', name: 'SI_how_null',                input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('ALERT',            'MEET_EXPECTATIONS',       'null')             } }, // SI  - how=null
+  { id: 'TR-3256', name: 'SI_no_what_how',             input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('ALERT',            null,                      null)               } }, // SI  - no what/how
+  { id: 'TR-3257', name: 'SI_esp_cumplio_alineado',    input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('ALERT',            'cumplió expectativas',    'alineado')         } }, // SI  - español
+  { id: 'TR-3258', name: 'SI_esp_supero_modelo',       input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('ALERT',            'superó expectativas',     'modelo a seguir')  } }, // SI  - español
+  { id: 'TR-3259', name: 'NO_esp_nocumplio',           input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('ALERT',            'no cumplió expectativas', 'alineado')         } }, // NO  - español
+  { id: 'TR-3260', name: 'NO_esp_cumplio_need',        input_context: { ...SHARED_USER, box: 'OUTLIER',      metrics: buildMetrics('ALERT',            'cumplió expectativas',    'necesita alinearse')} }, // NO  - español
 ];

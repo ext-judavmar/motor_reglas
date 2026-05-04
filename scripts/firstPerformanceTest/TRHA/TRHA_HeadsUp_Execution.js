@@ -1,21 +1,22 @@
 import http from 'k6/http';
 import { sleep } from 'k6';
-import { validateEnv, logRequest, logResponse, checkResponse, getOptions, handleSummary as buildSummary } from '../../generalfunctions/k6functions.js';
-import { executionCases } from '../../testdata/TRHA/TRHA-01_dimension_baja_ultima_pr.js';
-import { eligibleUsers } from '../../generalfunctions/csvdata.js';
+import { validateEnv, logRequest, logResponse, checkResponse, getOptions, handleSummary as buildSummary } from '../../../generalfunctions/k6functions.js';
+import { executionCases } from '../../../testdata/TRHA/TRHA_HeadsUp_testdata.js';
+import { eligibleUsers } from '../../../generalfunctions/csvdata.js';
 
 const BASE_URL    = __ENV.BASE_URL || 'https://test--fps-rule-engine.furyapps.io';
 const TIGER_TOKEN = `${__ENV.TIGER_TOKEN}`;
-const SCRIPT_NAME = 'TRHA-01_dimension_baja_ultima_pr_Execution';
+const SCRIPT_NAME = 'TRHA_HeadsUp_Execution';
 
-const CASE_TAGS = executionCases.map(tc => `${SCRIPT_NAME}_${tc.id}_${tc.name}`);
+const allCases = executionCases;
+const CASE_TAGS = allCases.map(tc => `${SCRIPT_NAME}_${tc.id}_${tc.name}`);
 
 export const options = getOptions(5, CASE_TAGS);
 
 export function setup() { validateEnv(); }
 
 export default function () {
-  const tc   = executionCases[Math.floor(Math.random() * executionCases.length)];
+  const tc   = allCases[Math.floor(Math.random() * allCases.length)];
   const user = Number(eligibleUsers[Math.floor(Math.random() * eligibleUsers.length)]);
 
   const url     = `${BASE_URL}/reglas/bulk/env-test/headsup/global-smu-prod`;

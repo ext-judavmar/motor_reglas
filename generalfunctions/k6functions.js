@@ -106,12 +106,14 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
     const maxVal = Math.max(...caseEndpoints.map(ep => Math.max(ep.avg, ep.p95, ep.p99 || 0))) * 1.1 || 1;
 
     const chartRows = caseEndpoints.map(ep => {
-      const { caseId } = parseTag(getDisplayName(ep.name));
+      const { caseId, caseDesc } = parseTag(getDisplayName(ep.name));
+      const trMatch = caseDesc.match(/^(TR-\d+)/);
+      const trId    = trMatch ? trMatch[1] : '';
       const avgPct = (ep.avg         / maxVal * 100).toFixed(1);
       const p95Pct = (ep.p95         / maxVal * 100).toFixed(1);
       const p99Pct = ((ep.p99 || 0)  / maxVal * 100).toFixed(1);
       return `<div style="display:flex;align-items:flex-start;margin-bottom:10px;gap:10px">
-        <div style="width:75px;color:#60a5fa;font-size:.75rem;font-weight:500;padding-top:2px;flex-shrink:0">${caseId}</div>
+        <div style="width:110px;color:#60a5fa;font-size:.75rem;font-weight:500;padding-top:2px;flex-shrink:0">${caseId}${trId ? `<div style="font-size:.65rem;color:#475569;font-weight:400">${trId}</div>` : ''}</div>
         <div style="flex:1">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="flex:1;background:#0f172a;border-radius:3px;height:12px"><div style="width:${avgPct}%;height:100%;background:#3b82f6;border-radius:3px"></div></div><span style="font-size:.7rem;color:#94a3b8;width:50px">${ep.avg.toFixed(0)}ms</span></div>
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="flex:1;background:#0f172a;border-radius:3px;height:12px"><div style="width:${p95Pct}%;height:100%;background:#8b5cf6;border-radius:3px"></div></div><span style="font-size:.7rem;color:#94a3b8;width:50px">${ep.p95.toFixed(0)}ms</span></div>
@@ -239,6 +241,55 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
 </html>`;
 }
 
+
+// Builds options for multi-scenario scripts (each scenario runs a named exported function concurrently).
+// scenarioFuncs: array of exported function name strings, e.g. ['execution', 'intapi']
+export function getScenariosOptions(defaultVus = 5, scenarioFuncs = [], tagNames = []) {
+  const targetVusEnv = `${__ENV.TARGET_VUS}`;
+  const targetVus    = isNumeric(targetVusEnv) ? Number(targetVusEnv) : defaultVus;
+  const testType     = __ENV.TEST_TYPE || 'smoke';
+
+  const stageProfiles = {
+    smoke:  [
+      { duration: '15s', target: targetVus },
+      { duration: '20s', target: targetVus },
+      { duration: '5s',  target: 0 }
+    ],
+    load:   [
+      { duration: '1m',  target: targetVus },
+      { duration: '5m',  target: targetVus },
+      { duration: '30s', target: 0 }
+    ],
+    stress: [
+      { duration: '2m',  target: targetVus },
+      { duration: '10m', target: targetVus },
+      { duration: '1m',  target: 0 }
+    ],
+  };
+
+  const stages = stageProfiles[testType] || stageProfiles.smoke;
+
+  const scenarios = {};
+  for (const funcName of scenarioFuncs) {
+    scenarios[funcName] = { executor: 'ramping-vus', stages, exec: funcName };
+  }
+
+  const thresholds = {
+    http_req_duration: ['p(95)<2000'],
+    http_req_failed:   ['rate<0.01'],
+  };
+  for (const name of tagNames) {
+    thresholds[`http_req_duration{name:${name}}`] = [];
+    thresholds[`http_reqs{name:${name}}`]         = [];
+    thresholds[`http_req_failed{name:${name}}`]   = [];
+  }
+
+  return {
+    summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
+    scenarios,
+    thresholds,
+  };
+}
 
 // Call from each script's setup() — aborts the test before any VU starts
 // if TIGER_TOKEN is missing or was not injected by the shell.

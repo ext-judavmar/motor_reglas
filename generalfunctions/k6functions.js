@@ -17,12 +17,18 @@ export function checkResponse(response) {
 }
 
 
+// Set VERBOSE_LOG=false to silence per-request logs (recommended for load/stress tests).
+// Default: enabled — useful for smoke runs and debugging.
+const verboseLog = (__ENV.VERBOSE_LOG || 'true').toLowerCase() !== 'false';
+
 export function logRequest(url, payload) {
+  if (!verboseLog) return;
   console.log(`[REQUEST] ${url}`);
   console.log(`[PAYLOAD] ${JSON.stringify(payload)}`);
 }
 
 export function logResponse(response) {
+  if (!verboseLog) return;
   console.log(`[STATUS]  ${response.status}`);
   console.log(`[BODY]    ${response.body}`);
 }

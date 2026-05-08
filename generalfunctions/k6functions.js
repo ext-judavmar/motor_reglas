@@ -2,6 +2,10 @@ import { check } from 'k6';
 import { Counter } from 'k6/metrics';
 
 const errorCounter = new Counter('errors');
+const errorsByStatus = new Counter('errors_by_status');
+
+// Common error status codes broken down in the summary report.
+const TRACKED_ERROR_STATUSES = ['0', '400', '401', '403', '404', '408', '429', '500', '502', '503', '504'];
 
 const isNumeric = (value) => /^\d+$/.test(value);
 
@@ -11,6 +15,7 @@ export function checkResponse(response) {
   const passed = check(response, { 'status is 200': (r) => r.status === 200 });
   if (!passed) {
     errorCounter.add(1);
+    errorsByStatus.add(1, { status: String(response.status) });
     console.error(`[FAIL] status=${response.status}`);
   }
   return passed;
@@ -36,25 +41,27 @@ export function logResponse(response) {
 
 // TEST_TYPE (smoke|load|stress) drives both stages and filename.
 // TARGET_VUS sets the peak VU count (default 5).
+// DURATION (optional) overrides the steady-state duration of the chosen profile (e.g. '2m', '90s').
 export function getOptions(defaultVus = 5, tagNames = []) {
-  const targetVusEnv = `${__ENV.TARGET_VUS}`;
-  const targetVus    = isNumeric(targetVusEnv) ? Number(targetVusEnv) : defaultVus;
-  const testType     = __ENV.TEST_TYPE || 'smoke';
+  const targetVusEnv  = `${__ENV.TARGET_VUS}`;
+  const targetVus     = isNumeric(targetVusEnv) ? Number(targetVusEnv) : defaultVus;
+  const testType      = __ENV.TEST_TYPE || 'smoke';
+  const customDuration = __ENV.DURATION;
 
   const stageProfiles = {
     smoke:  [
       { duration: '15s', target: targetVus },
-      { duration: '20s', target: targetVus },
+      { duration: customDuration || '20s', target: targetVus },
       { duration: '5s',  target: 0 }
     ],
     load:   [
       { duration: '1m',  target: targetVus },
-      { duration: '5m',  target: targetVus },
+      { duration: customDuration || '5m', target: targetVus },
       { duration: '30s', target: 0 }
     ],
     stress: [
       { duration: '2m',  target: targetVus },
-      { duration: '10m', target: targetVus },
+      { duration: customDuration || '10m', target: targetVus },
       { duration: '1m',  target: 0 }
     ],
   };
@@ -69,6 +76,9 @@ export function getOptions(defaultVus = 5, tagNames = []) {
     thresholds[`http_req_duration{name:${name}}`] = [];
     thresholds[`http_reqs{name:${name}}`]         = [];
     thresholds[`http_req_failed{name:${name}}`]   = [];
+  }
+  for (const status of TRACKED_ERROR_STATUSES) {
+    thresholds[`errors_by_status{status:${status}}`] = [];
   }
 
   return {
@@ -87,7 +97,7 @@ function parseTag(stripped) {
   };
 }
 
-function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, p99, errorRate, checks, fails, caseEndpoints, getDisplayName) {
+function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, p99, errorRate, checks, fails, caseEndpoints, getDisplayName, errorsByStatus = []) {
   const errorColor  = errorRate > 0 ? '#ef4444' : '#16a34a';
   const checksColor = fails    > 0 ? '#d97706' : '#16a34a';
 
@@ -242,6 +252,33 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
     ${findingsHtml}
   </div>
 
+  ${errorsByStatus.length > 0 ? `
+  <div class="card">
+    <div class="card-title">Errors by Status Code</div>
+    <table>
+      <thead><tr><th style="text-align:left">Status</th><th>Count</th><th>Description</th></tr></thead>
+      <tbody>
+        ${errorsByStatus.map(e => {
+          const desc = ({
+            '0':   'Timeout / network failure',
+            '400': 'Bad Request',
+            '401': 'Unauthorized (token expired or invalid)',
+            '403': 'Forbidden',
+            '404': 'Not Found',
+            '408': 'Request Timeout',
+            '429': 'Too Many Requests',
+            '500': 'Internal Server Error',
+            '502': 'Bad Gateway',
+            '503': 'Service Unavailable',
+            '504': 'Gateway Timeout',
+          })[e.status] || 'Other';
+          return `<tr><td style="color:#ef4444;font-weight:600">${e.status}</td><td>${e.count}</td><td style="text-align:left;color:#94a3b8">${desc}</td></tr>`;
+        }).join('\n        ')}
+      </tbody>
+    </table>
+  </div>
+  ` : ''}
+
   ${chartSection}
 </body>
 </html>`;
@@ -251,24 +288,25 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
 // Builds options for multi-scenario scripts (each scenario runs a named exported function concurrently).
 // scenarioFuncs: array of exported function name strings, e.g. ['execution', 'intapi']
 export function getScenariosOptions(defaultVus = 5, scenarioFuncs = [], tagNames = []) {
-  const targetVusEnv = `${__ENV.TARGET_VUS}`;
-  const targetVus    = isNumeric(targetVusEnv) ? Number(targetVusEnv) : defaultVus;
-  const testType     = __ENV.TEST_TYPE || 'smoke';
+  const targetVusEnv   = `${__ENV.TARGET_VUS}`;
+  const targetVus      = isNumeric(targetVusEnv) ? Number(targetVusEnv) : defaultVus;
+  const testType       = __ENV.TEST_TYPE || 'smoke';
+  const customDuration = __ENV.DURATION;
 
   const stageProfiles = {
     smoke:  [
       { duration: '15s', target: targetVus },
-      { duration: '20s', target: targetVus },
+      { duration: customDuration || '20s', target: targetVus },
       { duration: '5s',  target: 0 }
     ],
     load:   [
       { duration: '1m',  target: targetVus },
-      { duration: '5m',  target: targetVus },
+      { duration: customDuration || '5m', target: targetVus },
       { duration: '30s', target: 0 }
     ],
     stress: [
       { duration: '2m',  target: targetVus },
-      { duration: '10m', target: targetVus },
+      { duration: customDuration || '10m', target: targetVus },
       { duration: '1m',  target: 0 }
     ],
   };
@@ -288,6 +326,9 @@ export function getScenariosOptions(defaultVus = 5, scenarioFuncs = [], tagNames
     thresholds[`http_req_duration{name:${name}}`] = [];
     thresholds[`http_reqs{name:${name}}`]         = [];
     thresholds[`http_req_failed{name:${name}}`]   = [];
+  }
+  for (const status of TRACKED_ERROR_STATUSES) {
+    thresholds[`errors_by_status{status:${status}}`] = [];
   }
 
   return {
@@ -341,6 +382,16 @@ export function handleSummary(data, scriptName) {
   }
   endpoints.sort((a, b) => a.name.localeCompare(b.name));
 
+  // Collect error counts by HTTP status code (from tagged 'errors_by_status' counter)
+  const errorsByStatus = [];
+  for (const [key, metric] of Object.entries(data.metrics)) {
+    const m = key.match(/^errors_by_status\{status:(.+)\}$/);
+    if (!m) continue;
+    const count = metric.values.count || 0;
+    if (count > 0) errorsByStatus.push({ status: m[1], count });
+  }
+  errorsByStatus.sort((a, b) => b.count - a.count);
+
   // Strip the scriptName prefix from tag names to display only the case ID + description
   const displayName = (name) => {
     const prefix = scriptName + '_';
@@ -372,6 +423,15 @@ export function handleSummary(data, scriptName) {
 └─────────────────────────────────────────────┘
 `;
 
+  // Console: errors by status code
+  if (errorsByStatus.length > 0) {
+    consoleReport += '\nErrors by Status Code:\n';
+    for (const e of errorsByStatus) {
+      const label = e.status === '0' ? '0 (timeout/network)' : e.status;
+      consoleReport += `  - status ${label}: ${e.count}\n`;
+    }
+  }
+
   // Console: per-endpoint breakdown table
   const caseEndpoints = endpoints.filter(ep => ep.name !== scriptName);
   if (caseEndpoints.length > 0) {
@@ -395,7 +455,7 @@ export function handleSummary(data, scriptName) {
     consoleReport += `└${border}┘\n`;
   }
 
-  const htmlReport = generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, p99, errorRate, checks, fails, caseEndpoints, displayName);
+  const htmlReport = generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, p99, errorRate, checks, fails, caseEndpoints, displayName, errorsByStatus);
 
   return {
     [`${resultsDir}/report_${scriptName}_${testType}_t_${fileTimestamp}.csv`]:  csvHeader + csvRows,

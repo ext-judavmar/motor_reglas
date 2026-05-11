@@ -88,6 +88,12 @@ export function getOptions(defaultVus = 5, tagNames = []) {
   };
 }
 
+// ms when < 1s, seconds (2 decimals) when >= 1s
+function fmtTime(ms) {
+  const v = Number(ms) || 0;
+  return v < 1000 ? `${v.toFixed(0)}ms` : `${(v / 1000).toFixed(2)}s`;
+}
+
 // Splits a stripped tag (e.g. "TR-3224_NO_prev_achiever") into { caseId, caseDesc }
 function parseTag(stripped) {
   const sepIdx = stripped.indexOf('_');
@@ -109,7 +115,7 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
     findingsHtml   = outliers.length > 0
       ? outliers.map(ep => {
           const { caseId } = parseTag(getDisplayName(ep.name));
-          return `<div class="finding warn">&#9888; ${caseId}: p95=${ep.p95.toFixed(0)}ms is ${(ep.p95 / meanP95).toFixed(1)}x the mean p95 (${meanP95.toFixed(0)}ms)</div>`;
+          return `<div class="finding warn">&#9888; ${caseId}: p95=${fmtTime(ep.p95)} is ${(ep.p95 / meanP95).toFixed(1)}x the mean p95 (${fmtTime(meanP95)})</div>`;
         }).join('')
       : '<div class="finding ok">&#10003; No latency outliers detected</div>';
   } else {
@@ -131,9 +137,9 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
       return `<div style="display:flex;align-items:flex-start;margin-bottom:10px;gap:10px">
         <div style="width:110px;color:#60a5fa;font-size:.75rem;font-weight:500;padding-top:2px;flex-shrink:0">${caseId}${trId ? `<div style="font-size:.65rem;color:#475569;font-weight:400">${trId}</div>` : ''}</div>
         <div style="flex:1">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="flex:1;background:#0f172a;border-radius:3px;height:12px"><div style="width:${avgPct}%;height:100%;background:#3b82f6;border-radius:3px"></div></div><span style="font-size:.7rem;color:#94a3b8;width:50px">${ep.avg.toFixed(0)}ms</span></div>
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="flex:1;background:#0f172a;border-radius:3px;height:12px"><div style="width:${p95Pct}%;height:100%;background:#8b5cf6;border-radius:3px"></div></div><span style="font-size:.7rem;color:#94a3b8;width:50px">${ep.p95.toFixed(0)}ms</span></div>
-          <div style="display:flex;align-items:center;gap:6px"><div style="flex:1;background:#0f172a;border-radius:3px;height:12px"><div style="width:${p99Pct}%;height:100%;background:#f59e0b;border-radius:3px"></div></div><span style="font-size:.7rem;color:#94a3b8;width:50px">${(ep.p99 || 0).toFixed(0)}ms</span></div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="flex:1;background:#0f172a;border-radius:3px;height:12px"><div style="width:${avgPct}%;height:100%;background:#3b82f6;border-radius:3px"></div></div><span style="font-size:.7rem;color:#94a3b8;width:60px">${fmtTime(ep.avg)}</span></div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="flex:1;background:#0f172a;border-radius:3px;height:12px"><div style="width:${p95Pct}%;height:100%;background:#8b5cf6;border-radius:3px"></div></div><span style="font-size:.7rem;color:#94a3b8;width:60px">${fmtTime(ep.p95)}</span></div>
+          <div style="display:flex;align-items:center;gap:6px"><div style="flex:1;background:#0f172a;border-radius:3px;height:12px"><div style="width:${p99Pct}%;height:100%;background:#f59e0b;border-radius:3px"></div></div><span style="font-size:.7rem;color:#94a3b8;width:60px">${fmtTime(ep.p99 || 0)}</span></div>
         </div>
       </div>`;
     }).join('\n      ');
@@ -144,8 +150,8 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
       const errClr = ep.errorRate > 0 ? '#ef4444' : '#16a34a';
       return `<tr>
           <td>${caseId}</td><td>${caseDesc}</td>
-          <td>${ep.reqs}</td><td>${ep.avg.toFixed(0)}</td>
-          <td>${ep.p95.toFixed(0)}</td><td>${(ep.p99 || 0).toFixed(0)}</td>
+          <td>${ep.reqs}</td><td>${fmtTime(ep.avg)}</td>
+          <td>${fmtTime(ep.p95)}</td><td>${fmtTime(ep.p99 || 0)}</td>
           <td>${ep.rps.toFixed(2)}</td><td style="color:${errClr}">${errPct}%</td>
         </tr>`;
     }).join('\n        ');
@@ -166,7 +172,7 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
     <table>
       <thead><tr>
         <th>Case</th><th>Description</th><th>Samples</th>
-        <th>Avg (ms)</th><th>p95 (ms)</th><th>p99 (ms)</th><th>RPS</th><th>Err%</th>
+        <th>Avg</th><th>p95</th><th>p99</th><th>RPS</th><th>Err%</th>
       </tr></thead>
       <tbody>
         ${tableRows}
@@ -217,17 +223,17 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
     </div>
     <div class="kpi">
       <div class="kpi-lbl">Avg Response</div>
-      <div class="kpi-val">${duration.toFixed(0)}<span class="kpi-unit"> ms</span></div>
+      <div class="kpi-val">${fmtTime(duration)}</div>
       <div class="kpi-sub">mean latency</div>
     </div>
     <div class="kpi">
       <div class="kpi-lbl">p95 Response</div>
-      <div class="kpi-val">${p95.toFixed(0)}<span class="kpi-unit"> ms</span></div>
+      <div class="kpi-val">${fmtTime(p95)}</div>
       <div class="kpi-sub">95th percentile</div>
     </div>
     <div class="kpi">
       <div class="kpi-lbl">p99 Response</div>
-      <div class="kpi-val">${p99.toFixed(0)}<span class="kpi-unit"> ms</span></div>
+      <div class="kpi-val">${fmtTime(p99)}</div>
       <div class="kpi-sub">99th percentile</div>
     </div>
     <div class="kpi">
@@ -413,10 +419,10 @@ export function handleSummary(data, scriptName) {
 │  Test Type: ${testType.padEnd(30)} │
 ├─────────────────────────────────────────────┤
 │  VUs            : ${String(vus).padEnd(26)} │
-│  Avg Duration   : ${(duration.toFixed(2) + ' ms').padEnd(26)} │
+│  Avg Duration   : ${fmtTime(duration).padEnd(26)} │
 │  RPS            : ${rps.toFixed(2).padEnd(26)} │
-│  p95            : ${(p95.toFixed(2) + ' ms').padEnd(26)} │
-│  p99            : ${(p99.toFixed(2) + ' ms').padEnd(26)} │
+│  p95            : ${fmtTime(p95).padEnd(26)} │
+│  p99            : ${fmtTime(p99).padEnd(26)} │
 │  Error Rate     : ${((errorRate * 100).toFixed(2) + '%').padEnd(26)} │
 │  Checks Passed  : ${String(checks).padEnd(26)} │
 │  Checks Failed  : ${String(fails).padEnd(26)} │
@@ -438,16 +444,16 @@ export function handleSummary(data, scriptName) {
     const border = '─'.repeat(86);
     consoleReport += '\nEndpoint Breakdown:\n';
     consoleReport += `┌${border}┐\n`;
-    consoleReport += `│  ${'Case'.padEnd(9)} ${'Description'.padEnd(24)} ${'Samples'.padStart(7)} ${'Avg(ms)'.padStart(8)} ${'p95(ms)'.padStart(8)} ${'p99(ms)'.padStart(8)} ${'RPS'.padStart(6)} ${'Err%'.padStart(6)} │\n`;
+    consoleReport += `│  ${'Case'.padEnd(9)} ${'Description'.padEnd(24)} ${'Samples'.padStart(7)} ${'Avg'.padStart(8)} ${'p95'.padStart(8)} ${'p99'.padStart(8)} ${'RPS'.padStart(6)} ${'Err%'.padStart(6)} │\n`;
     consoleReport += `├${border}┤\n`;
     for (const ep of caseEndpoints) {
       const { caseId, caseDesc } = parseTag(displayName(ep.name));
       const id      = caseId.padEnd(9);
       const desc    = caseDesc.padEnd(24);
       const samples = String(ep.reqs).padStart(7);
-      const avg     = ep.avg.toFixed(0).padStart(8);
-      const p95s    = ep.p95.toFixed(0).padStart(8);
-      const p99s    = (ep.p99 || 0).toFixed(0).padStart(8);
+      const avg     = fmtTime(ep.avg).padStart(8);
+      const p95s    = fmtTime(ep.p95).padStart(8);
+      const p99s    = fmtTime(ep.p99 || 0).padStart(8);
       const rate    = ep.rps.toFixed(2).padStart(6);
       const err     = ((ep.errorRate * 100).toFixed(1) + '%').padStart(6);
       consoleReport += `│  ${id} ${desc} ${samples} ${avg} ${p95s} ${p99s} ${rate} ${err} │\n`;

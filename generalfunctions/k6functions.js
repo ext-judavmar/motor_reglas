@@ -1,5 +1,6 @@
 import { check } from 'k6';
 import { Counter } from 'k6/metrics';
+import { open as fsOpen } from 'k6/experimental/fs';
 
 const errorCounter = new Counter('errors');
 const errorsByStatus = new Counter('errors_by_status');
@@ -134,7 +135,7 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
       const avgPct = (ep.avg         / maxVal * 100).toFixed(1);
       const p95Pct = (ep.p95         / maxVal * 100).toFixed(1);
       const p99Pct = ((ep.p99 || 0)  / maxVal * 100).toFixed(1);
-      return `<div style="display:flex;align-items:flex-start;margin-bottom:10px;gap:10px">
+      return `<div class="chart-row" data-case="${caseId}" data-samples="${ep.reqs}" data-avg="${ep.avg}" data-p95="${ep.p95}" data-p99="${ep.p99 || 0}" data-rps="${ep.rps}" data-err="${ep.errorRate}" style="display:flex;align-items:flex-start;margin-bottom:10px;gap:10px">
         <div style="width:110px;color:#60a5fa;font-size:.75rem;font-weight:500;padding-top:2px;flex-shrink:0">${caseId}${trId ? `<div style="font-size:.65rem;color:#475569;font-weight:400">${trId}</div>` : ''}</div>
         <div style="flex:1">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="flex:1;background:#0f172a;border-radius:3px;height:12px"><div style="width:${avgPct}%;height:100%;background:#3b82f6;border-radius:3px"></div></div><span style="font-size:.7rem;color:#94a3b8;width:60px">${fmtTime(ep.avg)}</span></div>
@@ -148,7 +149,7 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
       const { caseId, caseDesc } = parseTag(getDisplayName(ep.name));
       const errPct = (ep.errorRate * 100).toFixed(1);
       const errClr = ep.errorRate > 0 ? '#ef4444' : '#16a34a';
-      return `<tr>
+      return `<tr data-case="${caseId}" data-samples="${ep.reqs}" data-avg="${ep.avg}" data-p95="${ep.p95}" data-p99="${ep.p99 || 0}" data-rps="${ep.rps}" data-err="${ep.errorRate}">
           <td>${caseId}</td><td>${caseDesc}</td>
           <td>${ep.reqs}</td><td>${fmtTime(ep.avg)}</td>
           <td>${fmtTime(ep.p95)}</td><td>${fmtTime(ep.p99 || 0)}</td>
@@ -158,23 +159,25 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
 
     chartSection = `
   <div class="card">
-    <div class="card-title">Response Time by Case</div>
+    <div class="card-title">Response Time by Case <span style="font-size:.68rem;color:#475569;text-transform:none;letter-spacing:0">&middot; click table headers below to re-sort</span></div>
     <div style="display:flex;gap:16px;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:#94a3b8"><div style="width:10px;height:10px;background:#3b82f6;border-radius:2px;flex-shrink:0"></div> Avg</div>
       <div style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:#94a3b8"><div style="width:10px;height:10px;background:#8b5cf6;border-radius:2px;flex-shrink:0"></div> p95</div>
       <div style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:#94a3b8"><div style="width:10px;height:10px;background:#f59e0b;border-radius:2px;flex-shrink:0"></div> p99</div>
     </div>
-    ${chartRows}
+    <div id="chart-rows">
+      ${chartRows}
+    </div>
   </div>
 
   <div class="card">
     <div class="card-title">Endpoint Breakdown</div>
     <table>
       <thead><tr>
-        <th>Case</th><th>Description</th><th>Samples</th>
-        <th>Avg</th><th>p95</th><th>p99</th><th>RPS</th><th>Err%</th>
+        <th class="sortable" data-sort="case">Case</th><th>Description</th><th class="sortable" data-sort="samples">Samples</th>
+        <th class="sortable" data-sort="avg">Avg</th><th class="sortable" data-sort="p95">p95</th><th class="sortable" data-sort="p99">p99</th><th class="sortable" data-sort="rps">RPS</th><th class="sortable" data-sort="err">Err%</th>
       </tr></thead>
-      <tbody>
+      <tbody id="breakdown-tbody">
         ${tableRows}
       </tbody>
     </table>
@@ -209,6 +212,10 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
     td:first-child{text-align:left;color:#60a5fa;font-weight:500}
     td:nth-child(2){text-align:left;color:#94a3b8}
     tr:hover td{background:#263348}
+    th.sortable{cursor:pointer;user-select:none}
+    th.sortable:hover{color:#94a3b8}
+    th.sortable[data-dir="asc"]::after{content:" ↑";color:#60a5fa}
+    th.sortable[data-dir="desc"]::after{content:" ↓";color:#60a5fa}
   </style>
 </head>
 <body>
@@ -286,6 +293,36 @@ function generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, 
   ` : ''}
 
   ${chartSection}
+  <script>
+    (function () {
+      var state = { key: 'avg', dir: 'desc' };
+      var tbody = document.getElementById('breakdown-tbody');
+      var chart = document.getElementById('chart-rows');
+      function applySort() {
+        var sign = state.dir === 'desc' ? -1 : 1;
+        function cmp(a, b) {
+          var av = a.getAttribute('data-' + state.key);
+          var bv = b.getAttribute('data-' + state.key);
+          if (state.key === 'case') return sign * av.localeCompare(bv);
+          return sign * (parseFloat(av) - parseFloat(bv));
+        }
+        if (tbody) Array.prototype.slice.call(tbody.children).sort(cmp).forEach(function (n) { tbody.appendChild(n); });
+        if (chart) Array.prototype.slice.call(chart.children).sort(cmp).forEach(function (n) { chart.appendChild(n); });
+        document.querySelectorAll('th.sortable').forEach(function (th) {
+          th.setAttribute('data-dir', th.getAttribute('data-sort') === state.key ? state.dir : '');
+        });
+      }
+      document.querySelectorAll('th.sortable').forEach(function (th) {
+        th.addEventListener('click', function () {
+          var k = th.getAttribute('data-sort');
+          if (state.key === k) state.dir = state.dir === 'desc' ? 'asc' : 'desc';
+          else { state.key = k; state.dir = (k === 'case') ? 'asc' : 'desc'; }
+          applySort();
+        });
+      });
+      applySort();
+    })();
+  </script>
 </body>
 </html>`;
 }
@@ -344,6 +381,27 @@ export function getScenariosOptions(defaultVus = 5, scenarioFuncs = [], tagNames
   };
 }
 
+// Reads the raw per-sample CSV that k6's CSV output writes during the test
+// (configured via K6_OUT=...,csv=/results/raw_metrics.csv in docker-compose).
+// Returns the file contents as a string, or null if the file is missing/unreadable.
+async function readRawCsv(path) {
+  try {
+    const file = await fsOpen(path);
+    const info = await file.stat();
+    if (!info || info.size === 0) return null;
+    const buf = new Uint8Array(info.size);
+    let read = 0;
+    while (read < info.size) {
+      const n = await file.read(buf.subarray(read));
+      if (n === null) break;
+      read += n;
+    }
+    return new TextDecoder().decode(buf);
+  } catch (e) {
+    return null;
+  }
+}
+
 // Call from each script's setup() — aborts the test before any VU starts
 // if TIGER_TOKEN is missing or was not injected by the shell.
 export function validateEnv() {
@@ -353,7 +411,7 @@ export function validateEnv() {
   }
 }
 
-export function handleSummary(data, scriptName) {
+export async function handleSummary(data, scriptName) {
   const timestamp = new Date().toISOString();
   const vus       = data.metrics.vus_max             ? data.metrics.vus_max.values.value              : 0;
   const duration  = data.metrics.iteration_duration  ? data.metrics.iteration_duration.values.avg      : 0;
@@ -367,6 +425,16 @@ export function handleSummary(data, scriptName) {
   const fileTimestamp = timestamp.replace('T', '_').replace(/:/g, '-').slice(0, 19);
   const testType      = __ENV.TEST_TYPE    || 'smoke';
   const resultsDir    = __ENV.RESULTS_PATH || 'results';
+
+  // Test-run duration (total elapsed time), formatted as Nsec for <60s and Nmin for >=60s.
+  const runDurationMs    = (data.state && data.state.testRunDurationMs) || 0;
+  const runDurationLabel = runDurationMs < 60000
+    ? `${Math.round(runDurationMs / 1000)}sec`
+    : `${Math.round(runDurationMs / 60000)}min`;
+
+  // Filename prefix used for both summary outputs (CSV/HTML) and the timestamped raw CSV copy.
+  // Example: TRHA_scenario_smoke_10VU_10min_t_2026-05-19_15-02-15
+  const filePrefix = `${scriptName}_${testType}_${vus}VU_${runDurationLabel}_t_${fileTimestamp}`;
 
   // Collect per-endpoint metrics from tagged requests
   const endpoints = [];
@@ -386,7 +454,7 @@ export function handleSummary(data, scriptName) {
       errorRate: failedMetric ? failedMetric.values.rate  : 0,
     });
   }
-  endpoints.sort((a, b) => a.name.localeCompare(b.name));
+  endpoints.sort((a, b) => b.avg - a.avg);
 
   // Collect error counts by HTTP status code (from tagged 'errors_by_status' counter)
   const errorsByStatus = [];
@@ -463,9 +531,18 @@ export function handleSummary(data, scriptName) {
 
   const htmlReport = generateHtml(scriptName, timestamp, testType, vus, duration, rps, p95, p99, errorRate, checks, fails, caseEndpoints, displayName, errorsByStatus);
 
-  return {
-    [`${resultsDir}/report_${scriptName}_${testType}_t_${fileTimestamp}.csv`]:  csvHeader + csvRows,
-    [`${resultsDir}/report_${scriptName}_${testType}_t_${fileTimestamp}.html`]: htmlReport,
+  const outputs = {
+    [`${resultsDir}/${filePrefix}.csv`]:  csvHeader + csvRows,
+    [`${resultsDir}/${filePrefix}.html`]: htmlReport,
     stdout: consoleReport
   };
+
+  // Copy the raw per-sample CSV (written live by k6's CSV output) under a
+  // timestamped name so each run keeps its own history alongside the rolling latest.
+  const rawCsv = await readRawCsv(`${resultsDir}/raw_metrics.csv`);
+  if (rawCsv) {
+    outputs[`${resultsDir}/raw_${filePrefix}.csv`] = rawCsv;
+  }
+
+  return outputs;
 }

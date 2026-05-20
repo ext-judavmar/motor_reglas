@@ -3,7 +3,7 @@ import { sleep } from 'k6';
 import { validateEnv, logRequest, logResponse, checkResponse, getOptions, handleSummary as buildSummary } from '../../../generalfunctions/k6functions.js';
 import { intApiCases } from '../../../testdata/TRMA/TRMA_Marcas_testdata.js';
 
-const BASE_URL    = __ENV.BASE_URL || 'https://test--fps-integration-api.furyapps.io';
+const BASE_URL    = __ENV.INTAPI_URL || 'https://test--fps-integration-api.furyapps.io';
 const TIGER_TOKEN = `${__ENV.TIGER_TOKEN}`;
 const SCRIPT_NAME = 'TRMA_Marcas_IntAPI';
 
